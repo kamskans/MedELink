@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useUser } from "@stackframe/stack"
 import Link from 'next/link'
 import styles from '@/styles/Navbar.module.css'
 
-export default function Navbar() {
+function NavbarContent() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const user = useUser()
@@ -72,5 +72,25 @@ export default function Navbar() {
         </div>
       </nav>
     </header>
+  )
+}
+
+export default function Navbar() {
+  return (
+    <Suspense fallback={
+      <header>
+        <nav className={styles.navbar}>
+          <div className={styles.navContainer}>
+            <div className={styles.logo}>
+              <Link href="/">
+                <span className={styles.logoText}>medElink</span>
+              </Link>
+            </div>
+          </div>
+        </nav>
+      </header>
+    }>
+      <NavbarContent />
+    </Suspense>
   )
 }

@@ -6,4 +6,5 @@ export const stackServerApp = new StackServerApp({
 
 export const stackClientApp = new StackClientApp({
   publishableClientKey: process.env.NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY!,
+  tokenStore: "nextjs-cookie",
 });
