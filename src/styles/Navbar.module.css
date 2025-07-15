@@ -75,6 +75,21 @@
   transform: rotate(45deg) translate(-5px, -6px);
 }
 
+.authButton {
+  background: #6366f1;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.authButton:hover {
+  background: #5856eb;
+}
+
 @media (max-width: 768px) {
   .navMenu {
     position: fixed;

@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { StackProvider, StackTheme } from "@stackframe/stack"
+import { stackClientApp } from "@/lib/stack"
 
 export const metadata: Metadata = {
   title: 'MedELink - Healthcare Management Platform',
@@ -13,7 +15,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <StackProvider app={stackClientApp}>
+          <StackTheme>
+            {children}
+          </StackTheme>
+        </StackProvider>
+      </body>
     </html>
   )
 }
