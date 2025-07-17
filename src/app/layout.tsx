@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import { StackProvider, StackTheme } from "@stackframe/stack"
-import { stackClientApp } from "@/lib/stack"
+import { AuthProvider } from '@/contexts/AuthContext'
 
 export const metadata: Metadata = {
   title: 'MedELink - Healthcare Management Platform',
@@ -16,11 +15,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <StackProvider app={stackClientApp}>
-          <StackTheme>
-            {children}
-          </StackTheme>
-        </StackProvider>
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   )

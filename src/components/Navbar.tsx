@@ -1,14 +1,14 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
-import { useUser } from "@stackframe/stack"
+import { useAuth } from '@/contexts/AuthContext'
 import Link from 'next/link'
 import styles from '@/styles/Navbar.module.css'
 
 function NavbarContent() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
-  const user = useUser()
+  const { user, signOut } = useAuth()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -46,7 +46,7 @@ function NavbarContent() {
                 <li><Link href="/dashboard" onClick={closeMenu}>Dashboard</Link></li>
                 <li>
                   <button 
-                    onClick={() => user.signOut()}
+                    onClick={() => signOut()}
                     className={styles.authButton}
                   >
                     Sign Out

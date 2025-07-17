@@ -21,61 +21,146 @@ model User {
   id        String   @id @default(cuid())
   email     String   @unique
   name      String?
-  role      UserRole @default(CASE_MANAGER)
+  userType  UserType
+  stackAuthId String? @unique // Stack Auth user ID
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Case Manager specific
-  caseManagerProfile CaseManagerProfile?
-  referrals          Referral[]
-
-  // Healthcare Professional specific
-  healthcareProfessionalProfile HealthcareProfessionalProfile?
-  appointments                  Appointment[]
+  // Relations based on user type
+  caseManagerProfile      CaseManagerProfile?
+  individualPractitioner  IndividualPractitionerProfile?
+  clientProfile          ClientProfile?
+  adminProfile           AdminProfile?
+  
+  // Shared relations
+  referrals              Referral[]
+  appointments           Appointment[]
 
   @@map("users")
+  @@index([stackAuthId])
+  @@index([userType])
 }
 
 model CaseManagerProfile {
-  id           String @id @default(cuid())
-  userId       String @unique
-  organization String?
-  phone        String?
+  id              String  @id @default(cuid())
+  userId          String  @unique
+  
+  // Onboarding tracking
+  onboardingStatus OnboardingStatus @default(NOT_STARTED)
+  onboardingStep  Int     @default(1)
+  
+  // Step 1 - Personal Information
+  name            String?
+  email           String?
+  address         String?
+  dateOfBirth     DateTime?
+  phoneNumber     String?
+  qualification   String?
+  qualificationYear String?
+  profession      String?
+  jobTitle        String?
+  profilePictureUrl String?
+  qualificationDocUrl String?
+  
+  // Step 2 - About Your Business
+  companyName     String?
+  companyEmail    String?
+  companyPhone    String?
+  businessType    String? // ltd-company, partnership, other
+  rehabilitationClients String? @db.Text
+  regulatoryBody  String?
+  practiceRestrictions String?
+  cqcRegulated    String?
+  additionalTraining String?
+  companyAddress  String?
+  companyLogoUrl  String?
+  
+  // Step 3 - Governance
+  registrationNumber String?
+  insuranceDocUrl String?
+  videoIntroUrl   String?
+  termsAccepted   Boolean @default(false)
+  
+  // Metadata
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
   
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("case_manager_profiles")
+  @@index([onboardingStatus])
 }
 
-model HealthcareProfessionalProfile {
+model IndividualPractitionerProfile {
   id            String   @id @default(cuid())
   userId        String   @unique
-  specialization String
+  
+  // Onboarding tracking
+  onboardingStatus OnboardingStatus @default(NOT_STARTED)
+  onboardingStep  Int     @default(1)
+  
+  // Profile information
+  specialization String?
   licenseNumber String?
   verified      Boolean  @default(false)
   phone         String?
   bio           String?
+  yearsOfExperience Int?
+  
+  // Similar onboarding fields as case manager
+  name          String?
+  email         String?
+  address       String?
+  dateOfBirth   DateTime?
+  qualification String?
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
   
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("healthcare_professional_profiles")
+  @@map("individual_practitioner_profiles")
+  @@index([onboardingStatus])
 }
 
-model Client {
+model ClientProfile {
   id          String   @id @default(cuid())
-  name        String
-  email       String?
-  phone       String?
+  userId      String   @unique
+  
+  // Client specific fields
   dateOfBirth DateTime?
-  condition   String?
-  notes       String?
+  phoneNumber String?
+  address     String?
+  emergencyContact String?
+  medicalHistory String? @db.Text
+  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Client can be associated with multiple referrals/appointments
   referrals    Referral[]
   appointments Appointment[]
 
-  @@map("clients")
+  @@map("client_profiles")
+}
+
+model AdminProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  
+  // Admin specific fields
+  department  String?
+  role        String?
+  permissions Json?    // Store admin permissions as JSON
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("admin_profiles")
 }
 
 model Referral {
@@ -89,7 +174,7 @@ model Referral {
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 
-  client      Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client      ClientProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
   caseManager User   @relation(fields: [caseManagerId], references: [id], onDelete: Cascade)
   
   appointments Appointment[]
@@ -101,7 +186,7 @@ model Appointment {
   id                      String            @id @default(cuid())
   referralId              String?
   clientId                String
-  healthcareProfessionalId String
+  professionalId          String
   scheduledAt             DateTime
   duration                Int               @default(60) // minutes
   status                  AppointmentStatus @default(SCHEDULED)
@@ -110,16 +195,43 @@ model Appointment {
   updatedAt               DateTime          @updatedAt
 
   referral               Referral? @relation(fields: [referralId], references: [id], onDelete: SetNull)
-  client                 Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  healthcareProfessional User      @relation(fields: [healthcareProfessionalId], references: [id], onDelete: Cascade)
+  client                 ClientProfile    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  professional           User      @relation(fields: [professionalId], references: [id], onDelete: Cascade)
 
   @@map("appointments")
 }
 
-enum UserRole {
+// File uploads tracking
+model FileUpload {
+  id          String   @id @default(cuid())
+  fileName    String
+  fileType    String
+  fileSize    Int
+  url         String
+  uploadedBy  String
+  entityType  String   // 'caseManager', 'practitioner', etc.
+  entityId    String   // ID of the profile
+  fieldName   String   // 'profilePicture', 'qualification', etc.
+  
+  createdAt   DateTime @default(now())
+  
+  @@map("file_uploads")
+  @@index([entityType, entityId])
+  @@index([uploadedBy])
+}
+
+// Enums
+enum UserType {
   CASE_MANAGER
-  HEALTHCARE_PROFESSIONAL
+  INDIVIDUAL_PRACTITIONER
+  CLIENT
   ADMIN
+}
+
+enum OnboardingStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
 }
 
 enum ReferralUrgency {

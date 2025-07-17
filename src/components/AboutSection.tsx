@@ -29,7 +29,7 @@ export default function AboutSection() {
           </div>
           <div className={styles.aboutImage}>
             <Image
-              src="/about-image.jpg"
+              src="/about-image.avif"
               alt="Healthcare team"
               width={500}
               height={400}

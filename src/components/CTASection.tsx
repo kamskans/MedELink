@@ -15,7 +15,7 @@ export default function CTASection() {
         </div>
         <div className={styles.ctaImage}>
           <Image
-            src="/doctor-image.jpg"
+            src="/doctor-image.avif"
             alt="Healthcare professional"
             width={300}
             height={400}

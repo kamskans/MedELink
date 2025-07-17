@@ -19,7 +19,7 @@ export default function Hero() {
         </div>
         <div className={styles.heroImage}>
           <Image
-            src="/hero-image.jpg"
+            src="/hero-image.avif"
             alt="Athlete on running track"
             width={400}
             height={300}
